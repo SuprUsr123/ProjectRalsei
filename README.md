@@ -1,5 +1,7 @@
 # Pixel Art Auto-Draw Chrome Extension
 
+(todo: make it cave johnson-ish)
+
 A Chrome extension that automatically converts images into pixel art guides for the ReKindle Pixel app. **Zero modifications to pixel.html required** - uses direct injection.
 
 ## Features
@@ -156,3 +158,4 @@ The extension uses **content script injection** to avoid any modifications to th
 ## License
 
 Created for ReKindle. Part of the pixel art automation suite.
+
