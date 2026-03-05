@@ -17,7 +17,7 @@ And, most importantly, this was made thanks to all of our Aperture Science Perso
 </details>
 
 Now, you might be wondering: "what the hell is this name?". Well, I named this thing after a test subject.
-<img src="./images/spr_ralsei_down.png" alt="The Subject." width="90" style="image-rendering: pixelated;" />
+<img src="./images/spr_ralsei_down.png" alt="The Subject." style="image-rendering: pixelated;" />
 <br>
 Look at him. (cue the aww sfx) Isn't he adorable? (for legal reasons we do not use him as our mascot.)
 Alright, we're gonna stop yapping here now.
@@ -40,5 +40,6 @@ That's it. Besides the "Image Rendering" thing that didn't work (we fired them),
 All good, ready to be relea-
 # WHAT DO YOU MEAN I HAVE TO INCLUDE A LICENSE?
 Public domain? That sounds good. Anything to make this thing release without complications.
+
 
 (cue the aperture investment opportunity outro)
