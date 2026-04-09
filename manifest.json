@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Pixel Art Auto-Draw",
+  "version": "1.0.0",
+  "description": "Upload an image and automatically guide pixel art drawing",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://localhost/*",
+    "https://localhost/*",
+    "https://rekindle.ink/*",
+    "https://*.rekindle.ink/*",
+    "file://*/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Pixel Art Auto-Draw"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["injector.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Art Auto-Draw</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Pixel Art Auto-Draw</h1>
+        
+        <div class="section">
+            <label for="image-input">Upload Image:</label>
+            <input type="file" id="image-input" accept="image/*">
+            <div id="image-info" class="image-info" style="display: none;">
+                <div>📏 <span id="image-dimensions"></span></div>
+                <div>💾 <span id="image-size"></span></div>
+            </div>
+            <div id="preview-container" class="preview-container" style="display: none;">
+                <img id="preview-image" alt="Preview">
+            </div>
+        </div>
+
+        <div class="section">
+            <label for="grid-size">Grid Size:</label>
+            <div class="grid-info">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <select id="grid-size">
+                        <option value="16">16x16</option>
+                        <option value="32" selected>32x32</option>
+                        <option value="64">64x64</option>
+                        <option value="128">128x128</option>
+                        <option value="256">256x256</option>
+                        <option value="custom">Custom Size</option>
+                    </select>
+                    <input type="number" id="custom-grid-size" placeholder="e.g., 100" min="8" max="512" style="width: 80px; display: none;">
+                </div>
+                <span id="grid-recommendation" class="recommendation"></span>
+            </div>
+        </div>
+
+        <div class="section">
+            <label>Preview Processing:</label>
+            <button id="preview-btn" class="btn-secondary" disabled>
+                Preview Result
+            </button>
+            <canvas id="preview-canvas" style="display: none; width: 100%; border: 2px solid #999; margin-top: 10px; image-rendering: pixelated;"></canvas>
+        </div>
+
+        <div class="section">
+            <label for="brightness">Brightness:</label>
+            <input type="range" id="brightness" min="0.5" max="2" step="0.1" value="1">
+            <span id="brightness-value">1</span>
+        </div>
+
+        <div class="section">
+            <label for="contrast">Contrast:</label>
+            <input type="range" id="contrast" min="0.5" max="2" step="0.1" value="1">
+            <span id="contrast-value">1</span>
+        </div>
+
+        <div class="section">
+            <label for="smoothing">Image Smoothing:</label>
+            <input type="range" id="smoothing" min="0" max="3" step="1" value="0">
+            <span id="smoothing-value">Off (Crisp)</span>
+        </div>
+
+        <div class="section">
+            <label>Advanced Options:</label>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="preserve-aspect-ratio" checked>
+                    <span>Preserve aspect ratio (pad with white)</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="center-image" checked>
+                    <span>Center image in grid</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="auto-save-thumbnail" checked>
+                    <span>Auto-save thumbnail</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="section">
+            <label for="drawing-name">Drawing Name (Optional):</label>
+            <input type="text" id="drawing-name" placeholder="Leave empty for auto-name" maxlength="50">
+        </div>
+            <div class="rendering-options">
+                <label class="radio-label">
+                    <input type="radio" name="rendering" value="crisp-edges" checked>
+                    <span class="radio-text">
+                        <strong>📐 Sharp & Crisp</strong>
+                        <small>Keep that pixelated look clean (Recommended)</small>
+                    </span>
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="rendering" value="pixelated">
+                    <span class="radio-text">
+                        <strong>🎮 Extra Pixelated</strong>
+                        <small>Maximum blocky pixel effect</small>
+                    </span>
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="rendering" value="auto">
+                    <span class="radio-text">
+                        <strong>🎨 Smooth & Soft</strong>
+                        <small>Smooth it out (less pixelated)</small>
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <button id="send-btn" class="btn-primary" disabled>
+            Send to Pixel App
+        </button>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
