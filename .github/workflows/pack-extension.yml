@@ -14,6 +14,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
       - name: Create extension zip
         run: |
           cd extension
@@ -21,16 +26,32 @@ jobs:
           cd ..
           ls -lh pixel-art-auto-draw.zip
 
-      - name: Upload artifact
+      - name: Install crx package
+        run: npm install -g crx
+
+      - name: Create .crx file
+        run: |
+          # Generate a private key if it doesn't exist
+          if [ ! -f "extension.pem" ]; then
+            openssl genrsa 2048 > extension.pem
+          fi
+          crx pack extension -o pixel-art-auto-draw.crx -p extension.pem
+          ls -lh pixel-art-auto-draw.crx
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: pixel-art-auto-draw
-          path: pixel-art-auto-draw.zip
+          path: |
+            pixel-art-auto-draw.zip
+            pixel-art-auto-draw.crx
 
       - name: Upload to Release
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v1
         with:
-          files: pixel-art-auto-draw.zip
+          files: |
+            pixel-art-auto-draw.zip
+            pixel-art-auto-draw.crx
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
