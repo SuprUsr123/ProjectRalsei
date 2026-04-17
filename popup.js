@@ -257,9 +257,42 @@ document.getElementById('send-btn').addEventListener('click', async () => {
         }
 
         // Generate thumbnail if requested
-        let thumbnailUrl = null;
+        let thumbnailData = null;
         if (autoSaveThumbnail && currentImageData.src) {
-            thumbnailUrl = currentImageData.src;
+            // Create a small thumbnail canvas (max 128x128) for storage
+            const thumbnailSize = 128;
+            const thumbCanvas = document.createElement('canvas');
+            const thumbCtx = thumbCanvas.getContext('2d');
+            
+            // Calculate dimensions maintaining aspect ratio
+            const img = currentImageData;
+            const scale = Math.min(
+                thumbnailSize / img.naturalWidth,
+                thumbnailSize / img.naturalHeight
+            );
+            const width = img.naturalWidth * scale;
+            const height = img.naturalHeight * scale;
+            
+            // Center the image in the canvas
+            thumbCanvas.width = thumbnailSize;
+            thumbCanvas.height = thumbnailSize;
+            thumbCtx.fillStyle = 'white';
+            thumbCtx.fillRect(0, 0, thumbnailSize, thumbnailSize);
+            thumbCtx.drawImage(
+                img,
+                (thumbnailSize - width) / 2,
+                (thumbnailSize - height) / 2,
+                width,
+                height
+            );
+            
+            // Convert to data URL for transmission
+            thumbnailData = {
+                type: 'canvas',
+                dataUrl: thumbCanvas.toDataURL('image/png'),
+                width: thumbnailSize,
+                height: thumbnailSize
+            };
         }
 
         // Send data to content script
@@ -268,7 +301,7 @@ document.getElementById('send-btn').addEventListener('click', async () => {
             gridSize: gridSize,
             pixelGrid: pixelGrid,
             drawingName: drawingName,
-            thumbnail: thumbnailUrl,
+            thumbnail: thumbnailData,
             preserveAspect: preserveAspect
         });
 

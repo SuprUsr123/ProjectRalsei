@@ -47,3 +47,14 @@ Public domain? That sounds good. Anything to make this thing release without com
 
 # NEW UPDATE!
 Merged ~~Black Mesa's~~ @tockdev's code, so that no one has to ever look around to find a copy. It's right here.
+
+# Further updates
+Had to make this less confusing, with "Fact Core" helping with why the extension is slow. It's still slow as "Fact Core", during earlier helping sessions, decided to use more "advanced imaging setups" to make it look good, unlike tock's code (as mine has various image sizes while tock only made the userscript as a PoC)
+
+## A Note On The "Crunchy" Image Rendering Issue
+
+Remember when we said "Chromium is the future"? Well, about that. The future has decided that your pixel art renders with what we technical experts call a "delightful crunch." It's not a bug—it's Chrome's gift to you.
+
+See, Chrome takes our nice `image-rendering` CSS property and treats it like a suggestion written on a napkin. "Oh, you want `crisp-edges`? How *adorable*. Let me just render this with my own proprietary anti-aliasing algorithm instead." No amount of CSS patches, canvas wrapping, or sacrificed test subjects will change Chrome's mind. It simply does not care about your pixel art dreams.
+
+We've given up trying to fight the future. The crunchy rendering is now an official feature—a charming reminder that even in 2026, web browsers still can't agree on how to display 8-bit aesthetics.

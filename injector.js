@@ -143,8 +143,9 @@
                                 const item = manifest.find(m => m.id === currentDrawingId);
                                 if (item) {
                                     item.title = drawingName;
-                                    if (thumbnail) {
-                                        item.thumbnail = thumbnail;
+                                    // Process thumbnail if provided
+                                    if (thumbnail && thumbnail.type === 'canvas' && thumbnail.dataUrl) {
+                                        item.thumbnail = thumbnail.dataUrl;
                                     }
                                     item.modified = Date.now();
                                     if (typeof saveManifest === 'function') {
