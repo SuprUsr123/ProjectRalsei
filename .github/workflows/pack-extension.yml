@@ -19,21 +19,6 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Update manifest from config
-        run: |
-          node -e "
-            const fs = require('fs');
-            const config = JSON.parse(fs.readFileSync('extension/config.json', 'utf8'));
-            const manifest = JSON.parse(fs.readFileSync('extension/manifest.json', 'utf8'));
-            
-            manifest.name = config.name;
-            manifest.version = config.version;
-            manifest.description = config.description;
-            
-            fs.writeFileSync('extension/manifest.json', JSON.stringify(manifest, null, 2));
-            console.log('✓ Manifest updated from config');
-          "
-
       - name: Create extension zip
         run: |
           cd extension
