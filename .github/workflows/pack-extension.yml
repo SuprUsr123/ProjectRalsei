@@ -1,0 +1,36 @@
+name: Pack Chrome Extension
+
+on:
+  push:
+    branches:
+      - main
+  release:
+    types: [created]
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create extension zip
+        run: |
+          cd extension
+          zip -r ../pixel-art-auto-draw.zip . -x "*.git*"
+          cd ..
+          ls -lh pixel-art-auto-draw.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixel-art-auto-draw
+          path: pixel-art-auto-draw.zip
+
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: pixel-art-auto-draw.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
