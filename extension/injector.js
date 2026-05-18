@@ -264,6 +264,19 @@
         }
         
         automateDrawing(gridSize, pixelGrid, metadata);
+        
+        // Hide the Drawing size modal to prevent user from being prompted
+        setTimeout(() => {
+            const newDrawingModal = document.getElementById('new-drawing-modal');
+            if (newDrawingModal) {
+                newDrawingModal.style.display = 'none';
+            }
+            // Also close any grid-size-modal that might appear
+            const gridSizeModal = document.getElementById('grid-size-modal');
+            if (gridSizeModal) {
+                gridSizeModal.style.display = 'none';
+            }
+        }, 50);
     });
 
     // Also expose as global functions in case direct access is needed

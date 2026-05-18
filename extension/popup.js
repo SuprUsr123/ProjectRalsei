@@ -305,7 +305,9 @@ document.getElementById('send-btn').addEventListener('click', async () => {
             preserveAspect: preserveAspect
         });
 
-        updateStatus('Drawing sent! Check the Pixel app.', 'success');
+        // Calculate and display time estimation
+        const timeEstimation = calculateTimeEstimation(gridSize, currentImageWidth, currentImageHeight, smoothing);
+        updateStatus(`Processing: ${timeEstimation}. Check the Pixel app.`, 'success');
     } catch (error) {
         console.error('Error:', error);
         updateStatus('Error: ' + error.message, 'error');
@@ -322,6 +324,45 @@ function updateStatus(message, type = 'info') {
             status.classList.remove('show');
         }, 3000);
     }
+}
+
+/**
+ * Calculate estimated time to process and draw the image
+ * @param {number} gridSize - Size of the grid
+ * @param {number} imageWidth - Original image width
+ * @param {number} imageHeight - Original image height
+ * @param {number} smoothing - Smoothing level (0-3)
+ * @returns {string} - Estimated time string (e.g., "2-3 seconds")
+ */
+function calculateTimeEstimation(gridSize, imageWidth, imageHeight, smoothing = 0) {
+    // Base time per pixel (in milliseconds)
+    const baseTimePerPixel = 0.8; // Base processing time
+    
+    // Smoothing factor - higher smoothing takes longer
+    const smoothingFactors = [1.0, 1.2, 1.4, 1.6];
+    const smoothingFactor = smoothingFactors[Math.min(smoothing, 3)];
+    
+    // Image complexity factor - larger source images take longer to process
+    const imagePixels = imageWidth * imageHeight;
+    const complexityFactor = Math.log(imagePixels) / Math.log(1000); // Logarithmic scaling
+    
+    // Total pixels to draw
+    const totalPixels = gridSize * gridSize;
+    
+    // Calculate total time in milliseconds
+    const totalTimeMs = (totalPixels * baseTimePerPixel * smoothingFactor * complexityFactor) + 500; // Add 500ms for setup
+    
+    // Convert to seconds and round
+    const totalSeconds = Math.round(totalTimeMs / 1000);
+    
+    // Provide a range estimate (±0.5 seconds for uncertainty)
+    const minSeconds = Math.max(1, totalSeconds - 1);
+    const maxSeconds = totalSeconds + 1;
+    
+    if (minSeconds === maxSeconds) {
+        return `~${totalSeconds} second${totalSeconds !== 1 ? 's' : ''}`;
+    }
+    return `${minSeconds}-${maxSeconds} seconds`;
 }
 
 /**
