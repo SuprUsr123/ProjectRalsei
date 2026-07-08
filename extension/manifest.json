@@ -16,8 +16,10 @@
     "file://*/*"
   ],
   "action": {
-    "default_popup": "popup.html",
     "default_title": "Pixel Art Auto-Draw"
+  },
+  "background": {
+    "service_worker": "background.js"
   },
   "web_accessible_resources": [
     {

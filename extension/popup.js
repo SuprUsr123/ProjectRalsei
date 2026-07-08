@@ -2,6 +2,7 @@ let currentImageData = null;
 let currentImageWidth = 0;
 let currentImageHeight = 0;
 let currentFileSize = 0;
+let sourceTabId = null;
 
 // Load rendering preference from storage
 document.addEventListener('DOMContentLoaded', () => {
@@ -9,6 +10,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const mode = result.renderingMode || 'crisp-edges';
         document.querySelector(`input[name="rendering"][value="${mode}"]`).checked = true;
     });
+
+    const params = new URLSearchParams(window.location.search);
+    const paramTabId = params.get('sourceTabId');
+    if (paramTabId) {
+        sourceTabId = parseInt(paramTabId, 10);
+    }
 
     // Handle custom grid size toggle
     document.getElementById('grid-size').addEventListener('change', (e) => {
@@ -248,11 +255,25 @@ document.getElementById('send-btn').addEventListener('click', async () => {
         // Convert image to pixel grid
         const pixelGrid = await imageToPixelGrid(currentImageData, gridSize, brightness, contrast, smoothing, preserveAspect, centerImage);
         
-        // Get the active tab
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        let tab = null;
+        let tabId = sourceTabId;
 
-        if (!tab.url.includes('pixel')) {
-            updateStatus('Please open the Pixel app first', 'error');
+        if (typeof sourceTabId === 'number') {
+            tab = await chrome.tabs.get(sourceTabId).catch(() => null);
+            if (!tab) {
+                tabId = null;
+            }
+        }
+
+        if (!tab) {
+            [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tab) {
+                tabId = tab.id;
+            }
+        }
+
+        if (!tab || !isPixelAppTab(tab)) {
+            updateStatus('Please open the Pixel app first (e.g. Pixel app tab on rekindle.ink or localhost)', 'error');
             return;
         }
 
@@ -295,8 +316,8 @@ document.getElementById('send-btn').addEventListener('click', async () => {
             };
         }
 
-        // Send data to content script
-        await chrome.tabs.sendMessage(tab.id, {
+        // Send data to content script (fallback by injecting if needed)
+        await sendMessageToTabWithRetry(tab.id, {
             type: 'DRAW_PIXEL_GRID',
             gridSize: gridSize,
             pixelGrid: pixelGrid,
@@ -363,6 +384,62 @@ function calculateTimeEstimation(gridSize, imageWidth, imageHeight, smoothing = 
         return `~${totalSeconds} second${totalSeconds !== 1 ? 's' : ''}`;
     }
     return `${minSeconds}-${maxSeconds} seconds`;
+}
+
+function isPixelAppTab(tab) {
+    if (!tab || !tab.url) return false;
+
+    const url = tab.url.toLowerCase();
+    const title = (tab.title || '').toLowerCase();
+
+    const acceptedHosts = [
+        'rekindle.ink',
+        'localhost',
+        '127.0.0.1',
+        'pixel-app',
+        'pixel'
+    ];
+
+    if (acceptedHosts.some(host => url.includes(host))) {
+        return true;
+    }
+
+    if (title.includes('pixel') || title.includes('rekindle') || title.includes('pixel art')) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * Send a message to a tab and inject the content script if the tab does not already have a receiver.
+ * @param {number} tabId
+ * @param {object} message
+ */
+async function sendMessageToTabWithRetry(tabId, message) {
+    const send = () => new Promise((resolve, reject) => {
+        chrome.tabs.sendMessage(tabId, message, (response) => {
+            if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message));
+                return;
+            }
+            resolve(response);
+        });
+    });
+
+    try {
+        return await send();
+    } catch (error) {
+        if (error.message.includes('Receiving end does not exist')) {
+            // Inject the content script and retry once
+            await chrome.scripting.executeScript({
+                target: { tabId },
+                files: ['content.js']
+            });
+            return await send();
+        }
+        throw error;
+    }
 }
 
 /**
