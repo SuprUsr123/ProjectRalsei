@@ -27,7 +27,7 @@ Well... this is for anyone with Chromium, as chromium is the fut- WHAT DO YOU ME
 ok, so installation time:
 1. Download the repo as a ZIP
 2. Wait...
-3. À̵̬̮̬̦̣͚Ǎ̴̡̬̤̩̤̮̆̓Á̸͙̈̎̍̆̏̎Ạ̴̖̟̗̎̊̑̑̔̈́̈́͘͝A̴̛̝̾̀̈́̄A̸͇͑̐̇̑̕̕̕A̴̫̣͂̀̾͌̚A̴̖̞͗̅̋̾̎̊̇̋̾A̶̝̼̤̜̞͉͎͙̅͛̉A̸͇̫̲̣̭͓̥͗A̴̤̣͒̿̅́͜͝Ȁ̵̡̘́̐̓͝Ầ̸̱͆̑͋̂̕͝Á̵̛̤̮̩̹̳̤̩̞̿̄̏͋̇̀͐A̴̙̥̲͉̪͊͑̇̋̌̈́̋̒̕Ä̴̛̬̹̔̀̕A̶͕͔͖̎͛̃̆̆͘͘ͅḀ̷̝̳̬̺̗́̅͆̋̽Á̶̠̘̞̪́̇̈́A̸̮̣̪̪̯̣͚̪̔Ȃ̷̳͙͓̩͇̂̎́͆̔̅̀̍Ạ̴̡̢̼̜͖̳͖͉̈́́͌̀A̷̯̱̓̿͠Ḁ̶̣̘̖̔A̵̗̠͌̾̊̏͋́͝͠͝À̶̢͉̳͔͉̻͕
+3. [![?](images/text.png)](https://deltarune.com)
 4. Extract it.
 5. Load up chrome://extensions
 6. Load up the extracted folder as unpacked extensions
