@@ -1,19 +1,20 @@
 {
   "manifest_version": 3,
   "name": "Pixel Art Auto-Draw",
-  "version": "1.0.0",
-  "description": "Upload an image and automatically guide pixel art drawing",
+  "version": "1.2.4",
+  "description": "Import images into ReKindle Pixel, including KindleChat entry links, with 64×64, 128×128 and 256×256 drawing sizes.",
   "permissions": [
     "activeTab",
     "scripting",
-    "storage"
+    "storage",
+    "tabs"
   ],
   "host_permissions": [
-    "http://localhost/*",
-    "https://localhost/*",
-    "https://rekindle.ink/*",
-    "https://*.rekindle.ink/*",
-    "file://*/*"
+    "*://rekindle.ink/*",
+    "*://*.rekindle.ink/*",
+    "*://localhost/*",
+    "*://127.0.0.1/*",
+    "file:///*"
   ],
   "action": {
     "default_title": "Pixel Art Auto-Draw"
@@ -21,17 +22,20 @@
   "background": {
     "service_worker": "background.js"
   },
-  "web_accessible_resources": [
-    {
-      "resources": ["injector.js"],
-      "matches": ["<all_urls>"]
-    }
-  ],
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "run_at": "document_start"
+      "matches": [
+        "*://rekindle.ink/*",
+        "*://*.rekindle.ink/*",
+        "*://localhost/*",
+        "*://127.0.0.1/*",
+        "file:///*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle",
+      "world": "MAIN"
     }
   ]
 }

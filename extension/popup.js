@@ -17,23 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
         sourceTabId = parseInt(paramTabId, 10);
     }
 
-    // Handle custom grid size toggle
-    document.getElementById('grid-size').addEventListener('change', (e) => {
-        const customInput = document.getElementById('custom-grid-size');
-        if (e.target.value === 'custom') {
-            customInput.style.display = 'block';
-            customInput.focus();
-        } else {
-            customInput.style.display = 'none';
-        }
-    });
-
-    // Validate custom grid size input
-    document.getElementById('custom-grid-size').addEventListener('input', (e) => {
-        const val = parseInt(e.target.value);
-        if (val < 8) e.target.value = 8;
-        if (val > 512) e.target.value = 512;
-    });
 });
 
 // Save rendering preference when changed
@@ -184,15 +167,11 @@ document.getElementById('preview-btn').addEventListener('click', async () => {
  * Get grid size - handles both preset and custom values
  */
 function getGridSize() {
-    const gridSelect = document.getElementById('grid-size');
-    if (gridSelect.value === 'custom') {
-        const customSize = parseInt(document.getElementById('custom-grid-size').value);
-        if (isNaN(customSize) || customSize < 8 || customSize > 512) {
-            throw new Error('Custom grid size must be between 8 and 512');
-        }
-        return customSize;
+    const size = Number(document.getElementById('grid-size').value);
+    if (![16, 32, 64, 128, 256].includes(size)) {
+        throw new Error('Choose a supported grid size (16, 32, 64, 128, or 256).');
     }
-    return parseInt(gridSelect.value);
+    return size;
 }
 
 /**
@@ -316,15 +295,16 @@ document.getElementById('send-btn').addEventListener('click', async () => {
             };
         }
 
-        // Send data to content script (fallback by injecting if needed)
-        await sendMessageToTabWithRetry(tab.id, {
-            type: 'DRAW_PIXEL_GRID',
-            gridSize: gridSize,
-            pixelGrid: pixelGrid,
-            drawingName: drawingName,
-            thumbnail: thumbnailData,
-            preserveAspect: preserveAspect
+        const injection = await chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            world: 'MAIN',
+            func: importGridIntoPixelApp,
+            args: [gridSize, pixelGrid, drawingName, thumbnailData]
         });
+        const result = injection && injection[0] && injection[0].result;
+        if (!result || !result.success) {
+            throw new Error((result && result.error) || 'Pixel app did not confirm the import.');
+        }
 
         // Calculate and display time estimation
         const timeEstimation = calculateTimeEstimation(gridSize, currentImageWidth, currentImageHeight, smoothing);
@@ -388,57 +368,70 @@ function calculateTimeEstimation(gridSize, imageWidth, imageHeight, smoothing = 
 
 function isPixelAppTab(tab) {
     if (!tab || !tab.url) return false;
-
-    const url = tab.url.toLowerCase();
-    const title = (tab.title || '').toLowerCase();
-
-    const acceptedHosts = [
-        'rekindle.ink',
-        'localhost',
-        '127.0.0.1',
-        'pixel-app',
-        'pixel'
-    ];
-
-    if (acceptedHosts.some(host => url.includes(host))) {
-        return true;
-    }
-
-    if (title.includes('pixel') || title.includes('rekindle') || title.includes('pixel art')) {
-        return true;
-    }
-
-    return false;
+    try {
+        // URL.pathname deliberately excludes ?query and #hash. KindleChat and
+        // other Pixel entry modes therefore remain valid importer targets.
+        const url = new URL(tab.url);
+        const host = url.hostname.toLowerCase();
+        const path = url.pathname.toLowerCase().replace(/\/+$/, '') || '/';
+        const isPixelPath = path === '/pixel' || path.endsWith('/pixel.html');
+        const hosted = (host === 'rekindle.ink' || host.endsWith('.rekindle.ink')) && isPixelPath;
+        const localHost = ['localhost', '127.0.0.1', '::1'].includes(host);
+        const local = localHost && (path === '/' || isPixelPath);
+        return hosted || local || (url.protocol === 'file:' && path.endsWith('/pixel.html'));
+    } catch (_) { return false; }
 }
 
-/**
- * Send a message to a tab and inject the content script if the tab does not already have a receiver.
- * @param {number} tabId
- * @param {object} message
- */
-async function sendMessageToTabWithRetry(tabId, message) {
-    const send = () => new Promise((resolve, reject) => {
-        chrome.tabs.sendMessage(tabId, message, (response) => {
-            if (chrome.runtime.lastError) {
-                reject(new Error(chrome.runtime.lastError.message));
-                return;
-            }
-            resolve(response);
-        });
-    });
-
+// Executes in the Pixel page's MAIN world, where the app's top-level lexical
+// variables (grid, gridSize, manifest, etc.) are accessible.
+async function importGridIntoPixelApp(size, pixels, title, thumbnail) {
     try {
-        return await send();
-    } catch (error) {
-        if (error.message.includes('Receiving end does not exist')) {
-            // Inject the content script and retry once
-            await chrome.scripting.executeScript({
-                target: { tabId },
-                files: ['content.js']
-            });
-            return await send();
+        if (typeof createNew !== 'function' || typeof redrawAllPixels !== 'function') {
+            return { success: false, error: 'Pixel editor is not ready. Open the editor first.' };
         }
-        throw error;
+        if (!Array.isArray(pixels) || pixels.length !== size ||
+            pixels.some(row => !Array.isArray(row) || row.length !== size)) {
+            return { success: false, error: 'Generated pixel grid has an invalid size.' };
+        }
+        if (typeof isManifestLoaded !== 'undefined' && !isManifestLoaded) {
+            return { success: false, error: 'Pixel is still loading its drawing library. Try again shortly.' };
+        }
+        if (typeof autoSaveTimer !== 'undefined' && autoSaveTimer) {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = null;
+        }
+        createNew(size);
+        await new Promise(resolve => setTimeout(resolve, 180));
+        if (typeof isReadOnly !== 'undefined' && isReadOnly) {
+            return { success: false, error: 'This Pixel drawing is read-only. Switch to My Drawings first.' };
+        }
+        if (typeof grid === 'undefined' || !grid) {
+            return { success: false, error: 'Pixel did not initialize its drawing grid.' };
+        }
+        gridSize = size;
+        grid = pixels.map(row => row.map(value => Math.max(0, Math.min(1, Number(value) || 0))));
+        if (typeof undoHistory !== 'undefined') undoHistory = [];
+        if (typeof redoHistory !== 'undefined') redoHistory = [];
+        redrawAllPixels();
+        if (typeof performSave === 'function') performSave();
+        else if (typeof triggerAutoSave === 'function') triggerAutoSave();
+
+        if (typeof currentDrawingId !== 'undefined' && currentDrawingId && typeof manifest !== 'undefined') {
+            const item = manifest.find(entry => entry.id === currentDrawingId);
+            if (item) {
+                item.title = String(title || 'Imported artwork').slice(0, 20);
+                if (thumbnail && thumbnail.dataUrl) item.thumbnail = thumbnail.dataUrl;
+                item.modified = Date.now();
+                if (typeof saveManifest === 'function') await saveManifest();
+            }
+        }
+        if (typeof updateUndoButton === 'function') updateUndoButton();
+        if (typeof updateRedoButton === 'function') updateRedoButton();
+        if (typeof showGallery === 'function') showGallery();
+        return { success: true, drawingId: typeof currentDrawingId !== 'undefined' ? currentDrawingId : null };
+    } catch (error) {
+        console.error('Pixel Auto-Draw import failed:', error);
+        return { success: false, error: error?.message || String(error) };
     }
 }
 
